@@ -87,6 +87,7 @@ def plot_adc_std(data, bins=None):
     plt.ylabel('channel count')
 
 def scatter_adc_std_mean(data):
+    # renamed to not anger file system when plot is saved
     plt.figure('scatter adc mean-std')
     plt.scatter([data[channel]['mean'] for channel in data.keys()], [data[channel]['std'] for channel in data.keys()],1)
     plt.xlabel('mean ADC')
@@ -230,7 +231,6 @@ if __name__ == '__main__':
     plt.yscale('log')
     scatter_adc_std_mean(data)
     plot_summary(data)
-    # plt.savefig('plot.pdf')
     # plt.show(block=True)
 
     vcm_mv, vref_mv = _adc2mv(77,0,1805), _adc2mv(219,0,1805)
