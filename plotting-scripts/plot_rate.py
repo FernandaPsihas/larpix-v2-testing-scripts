@@ -93,4 +93,5 @@ if __name__ == '__main__':
     data = main(*sys.argv[1:])
     plot_trigger_rate(data, list(data.keys())[0])
     plot_trigger_rate_summary(data)
+    plt.show(block=True)
 

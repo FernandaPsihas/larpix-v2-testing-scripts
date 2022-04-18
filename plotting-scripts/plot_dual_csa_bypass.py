@@ -81,3 +81,4 @@ def main(*args):
 
 if __name__ == '__main__':
     f = main(*sys.argv[1:])
+    plt.show(block=True)

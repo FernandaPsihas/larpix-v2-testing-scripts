@@ -83,3 +83,4 @@ def main(*args):
 if __name__ == '__main__':
     data = main(*sys.argv[1:])
     plot_summary(data)
+    plt.show(block=True)

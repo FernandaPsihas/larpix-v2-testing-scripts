@@ -450,6 +450,8 @@ class LArPixEVDFile(object):
         self.cores = cores
         self.is_multi_tile = False
 
+        self.io_group_io_channel_to_tile = {}
+
         # geometry lookup
         self.geometry = defaultdict(self._default_pxy)
         self.geometry_file = geometry_file
@@ -473,7 +475,6 @@ class LArPixEVDFile(object):
                 x_size = max(xs)-min(xs)+pixel_pitch
                 y_size = max(ys)-min(ys)+pixel_pitch
 
-                self.io_group_io_channel_to_tile = {}
                 for tile in geometry_yaml['tile_chip_to_io']:
                     tile_orientation = tile_orientations[tile]
                     self.tile_geometry[tile] = tile_positions[tile], tile_orientations[tile]

@@ -87,7 +87,7 @@ def plot_adc_std(data, bins=None):
     plt.ylabel('channel count')
 
 def scatter_adc_std_mean(data):
-    plt.figure('scatter adc mean/std')
+    plt.figure('scatter adc mean-std')
     plt.scatter([data[channel]['mean'] for channel in data.keys()], [data[channel]['std'] for channel in data.keys()],1)
     plt.xlabel('mean ADC')
     plt.ylabel('std dev ADC')
@@ -140,7 +140,7 @@ def gen_config_file(data, filename, vcm_mv, vref_mv):
     with open(filename, 'w') as f:
         json.dump(d, f, indent=4)
 
-def main(*args, excluded_channels=None):
+def main(*args, excluded_channels=None, disable_threshold=None):
     filename = args[0]
 
     print('opening',filename)
@@ -170,26 +170,51 @@ def main(*args, excluded_channels=None):
                 unique_channels.remove(unique_channel)
 
     data = dict()
+    # keep track of bad channels to generate a 'disabled_channels' cli for other scripts
+    disabled_channels = dict()
     for channel in sorted(unique_channels):
         channel_mask = unique_channel_id(io_group, io_channel, chip_id, channel_id) == channel
         timestamp = good_data[channel_mask]['timestamp']
         adc = good_data[channel_mask]['dataword']
         if len(adc) < 2: continue
 
+        std = np.std(adc)
         data[channel] = dict(
             channel_mask = channel_mask,
             timestamp = timestamp,
             adc = adc,
             mean = np.mean(adc),
-            std = np.std(adc)
+            std =std
             )
 
+        if disable_threshold is not None:
+            if std > disable_threshold or std == 0:
+                n_channel = int(channel)
+                n_io_group = (n_channel // (64*256*256)) % 256
+                n_io_channel = (n_channel // (64*256)) % 256
+                n_chip = (n_channel // 64) % 256
+                n_channel = n_channel % 64
+                key = '-'.join([str(it) for it in [n_io_group, n_io_channel, n_chip]])
+                if key in disabled_channels:
+                    disabled_channels[key].append(n_channel)
+                else:
+                    disabled_channels.update({key: [n_channel]})
+
         print('chip: {}\tchannel: {}\tn: {}\tmean: {:.02f}\tstd: {:.02f}\tunique: {}'.format((channel//64)%256,channel%64,len(data[channel]['adc']),data[channel]['mean'],data[channel]['std'],channel))
+
+    if disable_threshold is not None:
+        print(json.dumps(disabled_channels))
 
     return data
 
 if __name__ == '__main__':
-    data = main(*sys.argv[1:], excluded_channels=_excluded_channels)
+    # second (optional) arg will set standard deviation threshold above which channels will marked to be disabled
+    if len(sys.argv) >= 3:
+        disable_threshold = float(sys.argv[2])
+    else:
+        disable_threshold = None
+    print("disable_threshold =", disable_threshold)
+    data = main(*sys.argv[1:], excluded_channels=_excluded_channels, disable_threshold=disable_threshold)
     select_channels = list(data.keys())[-4:]
     print(select_channels)
     plot_adc_mean(data)
@@ -205,6 +230,8 @@ if __name__ == '__main__':
     plt.yscale('log')
     scatter_adc_std_mean(data)
     plot_summary(data)
+    # plt.savefig('plot.pdf')
+    # plt.show(block=True)
 
     vcm_mv, vref_mv = _adc2mv(77,0,1805), _adc2mv(219,0,1805)
     gen_pedestal_file(data, sys.argv[1][:-3]+'pedestal.json', vcm_mv=vcm_mv, vref_mv=vref_mv)
