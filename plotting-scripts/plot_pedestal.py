@@ -205,6 +205,7 @@ if __name__ == '__main__':
     plt.yscale('log')
     scatter_adc_std_mean(data)
     plot_summary(data)
+    plt.show(block=True)
 
     vcm_mv, vref_mv = _adc2mv(77,0,1805), _adc2mv(219,0,1805)
     gen_pedestal_file(data, sys.argv[1][:-3]+'pedestal.json', vcm_mv=vcm_mv, vref_mv=vref_mv)
