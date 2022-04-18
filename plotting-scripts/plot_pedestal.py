@@ -204,7 +204,7 @@ def main(*args, excluded_channels=None, disable_threshold=None):
         print('chip: {}\tchannel: {}\tn: {}\tmean: {:.02f}\tstd: {:.02f}\tunique: {}'.format((channel//64)%256,channel%64,len(data[channel]['adc']),data[channel]['mean'],data[channel]['std'],channel))
 
     if disable_threshold is not None:
-        print(json.dumps(disabled_channels))
+        print(f"--disabled_channels '{json.dumps(disabled_channels)}'")
 
     return data
 
